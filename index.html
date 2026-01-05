@@ -282,7 +282,7 @@ footer{margin-top:16px;color:var(--muted);font-size:12px}
 
 <div class="petBox" title="这里显示你的像素小动物（230×230）">
 
-<img id="petImg" alt="pet" src="assets/pet/placeholder.png" />
+<img id="petImg" alt="pet" src="assets/box/0000Z_01.jpg" />
 
 </div>
 
@@ -359,6 +359,43 @@ KEY_ANIMAL: 'jit_pet_animal_id_v1',
 KEY_START: 'jit_pet_start_date_v1'
 
 };
+
+// === 盲盒图（初始状态用）===
+const BOX = {
+  BASE: 'assets/box',
+  EXT: 'jpg',      // 如果你是 jpg 就改成 'jpg'
+  MIN: 1,
+  MAX: 20,
+  KEY: 'jit_box_pick_v1' // 让“今天”固定一张，不会每次刷新乱跳
+};
+
+function pickBoxIndexForToday(){
+  const key = `${BOX.KEY}:${todayKey()}`;
+  let n = parseInt(localStorage.getItem(key) || '', 10);
+  if(!n || Number.isNaN(n)){
+    n = Math.floor(Math.random() * (BOX.MAX - BOX.MIN + 1)) + BOX.MIN;
+    localStorage.setItem(key, String(n));
+  }
+  return n;
+}
+
+function boxFilename(n){
+  return `0000Z_${String(n).padStart(2,'0')}.${BOX.EXT}`;
+}
+
+function setBox(){
+  const img = document.getElementById('petImg');
+  if(!img) return;
+
+  const n = pickBoxIndexForToday();
+  img.src = `${BOX.BASE}/${boxFilename(n)}`;
+
+  img.onerror = () => {
+    img.onerror = null;
+    // 兜底：如果盲盒缺图，就回到宠物 Day1
+    img.src = `${PET.BASE}/${petFilename('A', 1)}`;
+  };
+}
 
 function pad2(n){ return String(n).padStart(2,'0'); }
 
@@ -441,9 +478,8 @@ if(!img) return;
 img.src = `${PET.BASE}/${petFilename(stage, day)}`;
 
 img.onerror = () => {
-
-img.src = `${PET.BASE}/${petFilename('A', 1)}`;
-
+	img.onerror = null; // 关键：防止无限循环
+	img.src = `${PET.BASE}/${petFilename('A', 1)}`;
 };
 
 }
@@ -565,7 +601,7 @@ if(todayItem && todayItem.done) setPet('C');
 
 else if(todayItem && !todayItem.done) setPet('B');
 
-else setPet('A');
+else setBox(); // 还没发布任务：显示盲盒
 
 }
 
