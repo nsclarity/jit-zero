@@ -426,7 +426,7 @@ function adoptNow(){
 
   showAdoptPanel(false);
   render(); // 领养后立刻进入正常页面（会按今天状态显示宠物 A/B/C 或 B）
-  document.getElementById('adoptBtn')?.addEventListener('click', adoptNow);
+
 }
 
 function pickBoxIndexForToday(){
@@ -661,7 +661,15 @@ if(todayItem && todayItem.done) setPet('C');
 
 else if(todayItem && !todayItem.done) setPet('B');
 
-else setBox(); // 还没发布任务：显示盲盒
+else {
+  if(!isAdopted()){
+    setBox();
+    showAdoptPanel(true);
+  } else {
+    setPet('A');      // 已领养但今天没任务：显示宠物A（Day1起）
+    showAdoptPanel(false);
+  }
+}
 
 }
 
@@ -723,6 +731,8 @@ render();
 // 首次渲染
 
 render();
+
+document.getElementById('adoptBtn')?.addEventListener('click', adoptNow);
 
 </script>
 
