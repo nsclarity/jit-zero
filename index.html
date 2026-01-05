@@ -76,8 +76,6 @@ border-radius:16px;
 
 padding:16px;
 
-backdrop-filter: blur(10px);
-
 }
 
 .row{display:flex;gap:10px;align-items:center}
@@ -250,6 +248,14 @@ footer{margin-top:16px;color:var(--muted);font-size:12px}
   background: radial-gradient(1000px 600px at 20% 0%, rgba(79,140,255,.25), transparent 60%), var(--bg);
   padding: 32px 16px;
 }
+
+/* 领养页：输入框不透明 */
+#adoptScreen #petNameInput{
+	background: #0b1220; /* 或者 #111a2e 看你更喜欢哪种 */
+}
+
+#adoptScreen .row{ gap: 8px; }
+#adoptScreen button{ padding: 10px 12px; border-radius: 10px; }
 
 #adoptScreen .dialog{
   width: min(720px, calc(100% - 32px));
