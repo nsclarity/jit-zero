@@ -242,6 +242,19 @@ color:var(--muted)
 
 footer{margin-top:16px;color:var(--muted);font-size:12px}
 
+#adoptModal { position:fixed; inset:0; z-index:9999; }
+#adoptModal .mask{
+  position:absolute; inset:0;
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+}
+#adoptModal .dialog{
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:min(720px, calc(100% - 32px));
+}
+
 </style>
 
 </head>
@@ -284,14 +297,23 @@ footer{margin-top:16px;color:var(--muted);font-size:12px}
   <img id="petImg" alt="pet" src="assets/box/0000Z_01.jpg" />
 </div>
 
-<div id="adoptPanel" style="display:none;margin-top:12px">
-  <div class="row">
-    <div class="input">
-      <textarea id="petNameInput" placeholder="请为你的盲盒宠物取个可爱的名字…"></textarea>
+<div id="adoptModal" style="display:none">
+  <div class="mask"></div>
+  <div class="dialog card">
+    <div style="display:flex;justify-content:center;margin-bottom:12px">
+      <div class="petBox">
+        <img id="adoptPreview" alt="box" src="assets/box/0000Z_01.jpg" />
+      </div>
     </div>
-    <button id="adoptBtn">领养</button>
+
+    <div class="row">
+      <div class="input">
+        <textarea id="petNameInput" placeholder="请为你的盲盒宠物取个可爱的名字…"></textarea>
+      </div>
+      <button id="adoptBtn">领养</button>
+    </div>
+    <div class="hint">领养后会开始记录你的挑战，并解锁宠物成长。</div>
   </div>
-  <div class="hint">领养后会开始记录你的挑战，并解锁宠物成长。</div>
 </div>
 
 </div>
@@ -390,9 +412,17 @@ function isAdopted(){
 }
 
 function showAdoptPanel(show){
-  const p = document.getElementById('adoptPanel');
-  if(!p) return;
-  p.style.display = show ? 'block' : 'none';
+  const m = document.getElementById('adoptModal');
+  if(!m) return;
+  m.style.display = show ? 'block' : 'none';
+
+  if(show){
+    const img = document.getElementById('adoptPreview');
+    if(img){
+      const n = pickBoxIndexForToday();
+      img.src = `${BOX.BASE}/${boxFilename(n)}`;
+    }
+  }
 }
 
 function adoptNow(){
