@@ -282,6 +282,16 @@ footer{margin-top:16px;color:var(--muted);font-size:12px}
 
 <div class="petBox" title="这里显示你的像素小动物（230×230）">
 
+<div id="adoptPanel" style="display:none;margin-top:12px">
+  <div class="row">
+    <div class="input">
+      <textarea id="petNameInput" placeholder="请为你的盲盒宠物取个可爱的名字…"></textarea>
+    </div>
+    <button id="adoptBtn">领养</button>
+  </div>
+  <div class="hint">领养后会开始记录你的挑战，并解锁宠物成长。</div>
+</div>
+
 <img id="petImg" alt="pet" src="assets/box/0000Z_01.jpg" />
 
 </div>
@@ -368,6 +378,56 @@ const BOX = {
   MAX: 20,
   KEY: 'jit_box_pick_v1' // 让“今天”固定一张，不会每次刷新乱跳
 };
+
+// === 领养流程 ===
+const ADOPT = {
+  KEY_DONE: 'jit_adopt_done_v1',
+  KEY_NAME: 'jit_pet_name_v1'
+};
+
+function isAdopted(){
+  return localStorage.getItem(ADOPT.KEY_DONE) === '1';
+}
+
+function showAdoptPanel(show){
+  const p = document.getElementById('adoptPanel');
+  if(!p) return;
+  p.style.display = show ? 'block' : 'none';
+}
+
+function adoptNow(){
+  const input = document.getElementById('petNameInput');
+  const name = (input?.value || '').trim();
+  if(!name){
+    showWarn('先给宠物取个名字再领养～');
+    return;
+  }
+
+  // 记录名字 + 标记已领养
+  localStorage.setItem(ADOPT.KEY_NAME, name);
+  localStorage.setItem(ADOPT.KEY_DONE, '1');
+
+  // 关键：领养当天开始 Day1（你说“第一天还是一开始那只小动物”）
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  const start = `${yyyy}-${mm}-${dd}`;
+
+  localStorage.setItem(PET.KEY_START, start);
+
+  // 固定/随机选择一只宠物（两选一）
+  // 1) 固定小兔子：如果你的小兔子编号就是 1，那就固定 1
+  // localStorage.setItem(PET.KEY_ANIMAL, '1');
+
+  // 2) 或者随机一只（如果你以后有多只，先留着）
+  // const id = Math.floor(Math.random() * (PET.ANIMAL_MAX - PET.ANIMAL_MIN + 1)) + PET.ANIMAL_MIN;
+  // localStorage.setItem(PET.KEY_ANIMAL, String(id));
+
+  showAdoptPanel(false);
+  render(); // 领养后立刻进入正常页面（会按今天状态显示宠物 A/B/C 或 B）
+  document.getElementById('adoptBtn')?.addEventListener('click', adoptNow);
+}
 
 function pickBoxIndexForToday(){
   const key = `${BOX.KEY}:${todayKey()}`;
@@ -607,7 +667,14 @@ else setBox(); // 还没发布任务：显示盲盒
 
 document.getElementById('publishBtn').addEventListener('click', ()=>{
 
-const task = document.getElementById('taskInput').value.trim();
+  // 还没领养：先让用户领养（输入名字 + 点领养）
+  if(!isAdopted()){
+    showAdoptPanel(true);
+    showWarn('先领养你的盲盒宠物，再发布今天的一件事～');
+    return;
+  }
+
+  const task = document.getElementById('taskInput').value.trim();
 
 if(!task){
 
