@@ -1,0 +1,628 @@
+﻿<!-- 1/2 开始｜复制到 jit2.html 顶部 -->
+
+<!doctype html>
+
+<html lang="zh-CN">
+
+<head>
+
+<meta charset="utf-8" />
+
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<title>JIT零库存挑战</title>
+
+<style>
+
+:root{
+
+--bg:#0b1220;
+
+--card:#111a2e;
+
+--muted:#9fb0d0;
+
+--text:#e8eeff;
+
+--accent:#4f8cff;
+
+--ok:#22c55e;
+
+--danger:#ef4444;
+
+--border:rgba(255,255,255,.12);
+
+}
+
+*{box-sizing:border-box}
+
+body{
+
+margin:0;
+
+font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial;
+
+background:radial-gradient(1000px 600px at 20% 0%,rgba(79,140,255,.25),transparent 60%),var(--bg);
+
+color:var(--text);
+
+min-height:100vh;
+
+display:flex;
+
+align-items:flex-start;
+
+justify-content:center;
+
+padding:32px 16px;
+
+}
+
+.container{width:100%;max-width:760px}
+
+header{margin-bottom:18px}
+
+h1{margin:0;font-size:28px;letter-spacing:.5px}
+
+.subtitle{margin-top:6px;color:var(--muted)}
+
+.card{
+
+background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+
+border:1px solid var(--border);
+
+border-radius:16px;
+
+padding:16px;
+
+backdrop-filter: blur(10px);
+
+}
+
+.row{display:flex;gap:10px;align-items:center}
+
+.input{flex:1}
+
+textarea{
+
+width:100%;
+
+min-height:56px;
+
+resize:vertical;
+
+border-radius:12px;
+
+padding:12px;
+
+border:1px solid var(--border);
+
+background:rgba(0,0,0,.25);
+
+color:var(--text);
+
+outline:none;
+
+}
+
+textarea:focus{
+
+border-color:rgba(79,140,255,.7);
+
+box-shadow:0 0 0 3px rgba(79,140,255,.18)
+
+}
+
+button{
+
+border:0;
+
+background:var(--accent);
+
+color:white;
+
+font-weight:700;
+
+padding:12px 14px;
+
+border-radius:12px;
+
+cursor:pointer;
+
+white-space:nowrap;
+
+}
+
+button:disabled{opacity:.45;cursor:not-allowed}
+
+.hint{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.5}
+
+.statWrap{
+
+margin:14px 0 10px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:14px
+
+}
+
+.stat{margin:0;color:var(--text);font-weight:700}
+
+.stat span{color:var(--ok)}
+
+.petBox{
+
+width:230px;
+
+height:230px;
+
+border-radius:16px;
+
+border:1px solid var(--border);
+
+background:rgba(0,0,0,.18);
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+overflow:hidden;
+
+flex:0 0 230px
+
+}
+
+.petBox img{
+
+width:230px;
+
+height:230px;
+
+object-fit:cover;
+
+image-rendering:pixelated
+
+}
+
+.list{margin-top:10px;display:flex;flex-direction:column;gap:10px}
+
+.item{
+
+display:flex;
+
+gap:12px;
+
+align-items:flex-start;
+
+padding:12px;
+
+border-radius:14px;
+
+border:1px solid var(--border);
+
+background:rgba(0,0,0,.18)
+
+}
+
+.item .meta{min-width:110px;color:var(--muted);font-size:13px}
+
+.item .task{flex:1;white-space:pre-wrap;line-height:1.5}
+
+.item .actions{display:flex;align-items:center;gap:8px}
+
+.checkbox{width:22px;height:22px;cursor:pointer}
+
+.badge{
+
+font-size:12px;
+
+padding:3px 8px;
+
+border-radius:999px;
+
+border:1px solid var(--border);
+
+color:var(--muted)
+
+}
+
+.done .task{opacity:.8;text-decoration:line-through}
+
+.done .badge{color:rgba(34,197,94,.95);border-color:rgba(34,197,94,.45)}
+
+.warning{color:var(--danger);margin-top:10px;font-size:13px}
+
+footer{margin-top:16px;color:var(--muted);font-size:12px}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+
+<h1>JIT零库存挑战</h1>
+
+<div class="subtitle">Just in Time</div>
+
+</header>
+
+<section class="card">
+
+<div class="row">
+
+<div class="input">
+
+<textarea id="taskInput" placeholder="填写今天只做的一件事…（建议写到可验收的程度）"></textarea>
+
+</div>
+
+<button id="publishBtn">发布任务</button>
+
+</div>
+
+<div class="hint">说明：每天只能发布 1 条（按本机日期）。发布后可在下方列表打勾完成。</div>
+
+<div id="warn" class="warning" style="display:none"></div>
+
+<div class="statWrap">
+
+<div class="stat">恭喜你！已经完成 0 件任务啦</div>
+
+<div class="petBox" title="这里显示你的像素小动物（230×230）">
+
+<img id="petImg" alt="pet" src="assets/pet/placeholder.png" />
+
+</div>
+
+</div>
+
+</section>
+
+<section class="list" id="history"></section>
+
+<footer>数据保存在浏览器 localStorage（仅本机）。更换设备/清缓存会丢记录。</footer>
+
+</div>
+
+<script>
+
+// === 任务数据 ===
+
+const STORAGE_KEY = 'jit_zero_inventory_tasks_v1';
+
+function todayKey(){
+
+const d = new Date();
+
+const yyyy = d.getFullYear();
+
+const mm = String(d.getMonth()+1).padStart(2,'0');
+
+const dd = String(d.getDate()).padStart(2,'0');
+
+return `${yyyy}-${mm}-${dd}`;
+
+}
+
+function load(){
+
+try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+
+catch(e){ return []; }
+
+}
+
+function save(list){
+
+localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+
+}
+
+function showWarn(msg){
+
+const w = document.getElementById('warn');
+
+w.style.display = 'block';
+
+w.textContent = msg;
+
+setTimeout(()=>{w.style.display='none'; }, 3500);
+
+}
+
+// === 宠物图片规则（按你的命名：0001A_01.jpg）===
+
+const PET = {
+
+BASE: 'assets/pet',
+
+EXT: 'jpg',
+
+ANIMAL_MIN: 1,
+
+ANIMAL_MAX: 1,
+
+KEY_ANIMAL: 'jit_pet_animal_id_v1',
+
+KEY_START: 'jit_pet_start_date_v1'
+
+};
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+function pad4(n){ return String(n).padStart(4,'0'); }
+
+function getOrInitStartDate(){
+
+let s = localStorage.getItem(PET.KEY_START);
+
+if(!s){
+
+const now = new Date();
+
+const yyyy = now.getFullYear();
+
+const mm = String(now.getMonth()+1).padStart(2,'0');
+
+const dd = String(now.getDate()).padStart(2,'0');
+
+s = `${yyyy}-${mm}-${dd}`;
+
+localStorage.setItem(PET.KEY_START, s);
+
+}
+
+return s;
+
+}
+
+function dayIndex(){
+
+const startStr = getOrInitStartDate();
+
+const start = new Date(startStr + 'T00:00:00');
+
+const now = new Date();
+
+const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+const diffDays = Math.floor((today - start) / (24*60*60*1000));
+
+return Math.max(1, diffDays + 1);
+
+}
+
+function getOrPickAnimalId(){
+
+let id = parseInt(localStorage.getItem(PET.KEY_ANIMAL) || '', 10);
+
+if(!id || Number.isNaN(id)){
+
+id = Math.floor(Math.random() * (PET.ANIMAL_MAX - PET.ANIMAL_MIN + 1)) + PET.ANIMAL_MIN;
+
+localStorage.setItem(PET.KEY_ANIMAL, String(id));
+
+}
+
+return id;
+
+}
+
+function petFilename(stage, day){
+
+const dayPart = day < 100 ? pad2(day) : String(day);
+
+const animalPart = pad4(getOrPickAnimalId());
+
+return `${animalPart}${stage}_${dayPart}.${PET.EXT}`;
+
+}
+
+function setPet(stage){
+
+const day = dayIndex();
+
+const img = document.getElementById('petImg');
+
+if(!img) return;
+
+img.src = `${PET.BASE}/${petFilename(stage, day)}`;
+
+img.onerror = () => {
+
+img.src = `${PET.BASE}/${petFilename('A', 1)}`;
+
+};
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 2/2 开始｜把下面内容紧接着粘在 1/2 后面（不要另起文件） -->
+
+function render(){
+
+const list = load();
+
+// 新到旧：先按日期，再按创建时间
+
+list.sort((a,b)=> (
+
+(a.date < b.date ? 1 : a.date > b.date ? -1 : (b.createdAt - a.createdAt))
+
+));
+
+// 更新完成数
+
+const done = list.filter(x=>x.done).length;
+
+const dc = document.getElementById('doneCount');
+
+if(dc) dc.textContent = String(done);
+
+document.getElementById('doneCount'); if(dc) dc.textContent = String(done);
+
+// 渲染历史
+
+const wrap = document.getElementById('history');
+
+wrap.innerHTML = '';
+
+if(list.length === 0){
+
+wrap.innerHTML = `<div class="card" style="text-align:center;color:var(--muted)">还没有记录。先发布今天的一件事吧。</div>`;
+
+} else {
+
+for(const item of list){
+
+const el = document.createElement('div');
+
+el.className = 'item' + (item.done ? ' done' : '');
+
+el.innerHTML = `
+
+<div class="meta">${item.date}</div>
+
+<div class="task"></div>
+
+<div class="actions">
+
+<input class="checkbox" type="checkbox" ${item.done ? 'checked' : ''} />
+
+${item.done ? '已完成' : '未完成'}
+
+</div>
+
+`;
+
+el.querySelector('.task').textContent = item.task;
+
+el.querySelector('input').addEventListener('change', (e)=>{
+
+const list2 = load();
+
+const target = list2.find(x=>x.id===item.id);
+
+if(target){
+
+target.done = e.target.checked;
+
+save(list2);
+
+render();
+
+}
+
+});
+
+wrap.appendChild(el);
+
+}
+
+}
+
+// === 宠物状态（A/B/C）===
+
+// A：今天没任务
+
+// B：今天有任务但未完成
+
+// C：今天有任务且已完成
+
+const today = todayKey();
+
+const todayItem = list.find(x => x.date === today);
+
+if(todayItem && todayItem.done) setPet('C');
+
+else if(todayItem && !todayItem.done) setPet('B');
+
+else setPet('A');
+
+}
+
+document.getElementById('publishBtn').addEventListener('click', ()=>{
+
+const task = document.getElementById('taskInput').value.trim();
+
+if(!task){
+
+showWarn('先写下今天的一件事再发布。');
+
+return;
+
+}
+
+const list = load();
+
+const tkey = todayKey();
+
+const already = list.some(x=>x.date===tkey);
+
+if(already){
+
+showWarn('今天已经发布过 1 条任务了。每天只完成一件事。');
+
+return;
+
+}
+
+list.push({
+
+id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
+
+date: tkey,
+
+task,
+
+done: false,
+
+createdAt: Date.now()
+
+});
+
+save(list);
+
+document.getElementById('taskInput').value = '';
+
+render();
+
+});
+
+// 首次渲染
+
+render();
+
+</script>
+
+</body>
+
+</html>
